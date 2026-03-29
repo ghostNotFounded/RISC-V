@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module immGen #(
     parameter BUS_SIZE = 32
 ) (

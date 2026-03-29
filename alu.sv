@@ -1,7 +1,10 @@
+`timescale 1ns/1ps
+`include "consts.svh"
+
 module alu #(
     parameter BUS_SIZE = 32
 ) (
-    input   logic [2:0]             aluop,
+    input   logic [3:0]             aluop,
     input   logic signed [BUS_SIZE-1:0]    A,
     input   logic signed [BUS_SIZE-1:0]    B,
 
@@ -10,15 +13,20 @@ module alu #(
 );
     always @(*) begin
         case (aluop)
-            3'b001: y = (A + B);                       // ADD
-            3'b000: y = A - B;                         // SUB
-            3'b010: y = A & B;                         // AND
-            3'b011: y = A | B;                         // OR
-            3'b100: y = (A << B[4:0]);                 // SLL
-            3'b101: y = (A >> B[4:0]);                 // SRL
-            3'b110: y = (A < B) ? 32'b1 : 32'b0;       // SLT
-            3'b111: y = 32'b0;                             // Output zero
-            default: y = 32'b0;
+            `ALU_ADD:   y = A + B;
+            `ALU_SUB:   y = A - B;
+            `ALU_AND:   y = A & B;
+            `ALU_OR:    y = A | B;
+            `ALU_XOR:   y = A ^ B;
+            
+            `ALU_SLL:   y = A << B[5:0];
+            `ALU_SRL:   y = A >> B[5:0];
+            `ALU_SRA:   y = A >>> B[5:0];
+            
+            `ALU_SLT:   y = (A < B) ? 32'd1 : 32'd0;
+            `ALU_SLTU:  y = ($unsigned(A) < $unsigned(B)) ? 32'd1 : 32'd0;
+
+            default:    y = 32'b0;
         endcase
     end
 
