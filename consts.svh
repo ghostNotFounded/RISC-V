@@ -67,4 +67,9 @@
 
     `define ALU_SLT             4'd8
     `define ALU_SLTU            4'd9
+
+    // Write Back Operations
+    `define WBSel_MEM           2'b00;
+    `define WBSel_ALU           2'b01;
+    `define WBSel_PC4           2'b10;
 `endif

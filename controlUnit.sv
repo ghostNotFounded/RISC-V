@@ -17,14 +17,13 @@ module controlUnit #(
     output logic MemRW,
     output logic [1:0] WBSel
 );
-    localparam WBSel_MEM = 2'b00;
-    localparam WBSel_ALU = 2'b01;
-    localparam WBSel_PC4 = 2'b10;
+    logic [2:0] funct3;
+    logic [6:0] funct7;
 
-    wire [2:0] funct3;
-    wire [6:0] funct7;
+    assign funct3 = instr[14:12];
+    assign funct7 = instr[31:25];
 
-    always @(*) begin
+    always_comb begin
         PCSel = 0;
         RegWEn = 0;
         BrUn = 0;
@@ -34,11 +33,10 @@ module controlUnit #(
         MemRW = 0;
         WBSel = 0;
 
-
         case (instr[6:0])
             `OPC_R: begin
                 RegWEn = 1;
-                WBSel = WBSel_ALU;
+                WBSel = `WBSel_ALU;
 
                 case (funct3)
                     `FUNCT3_ADD_SUB:    ALUOp = (funct7 == `FUNCT7_SRA_SUB) ? `ALU_SUB : `ALU_ADD;
@@ -49,14 +47,32 @@ module controlUnit #(
                     `FUNCT3_XOR:        ALUOp = `ALU_XOR;
                     `FUNCT3_OR:         ALUOp = `ALU_OR;
                     `FUNCT3_AND:        ALUOp = `ALU_AND;
-                    default:            ALUOp = `ALU_AND;
+
+                    default:            ALUOp = `ALU_ADD;
                 endcase
             end
+
+            `OPC_I: begin
+                RegWEn = 1;
+                BSel = 1;
+                WBSel = `WBSel_ALU;
+
+                case (funct3)
+                    `FUNCT3_ADDI:       ALUOp = `ALU_ADD;
+                    `FUNCT3_XORI:       ALUOp = `ALU_XOR;
+                    `FUNCT3_ORI:        ALUOp = `ALU_OR;
+                    `FUNCT3_ANDI:       ALUOp = `ALU_AND;
+                    `FUNCT3_SLLI:       ALUOp = `ALU_SLL;
+                    `FUNCT3_SRAI_SRLI:  ALUOp = (funct7 == `FUNCT7_SRA_SUB) ? `ALU_SRA : `ALU_SRL;
+                    `FUNCT3_SLTI:       ALUOp = `ALU_SLT;
+                    `FUNCT3_SLTIU:      ALUOp = `ALU_SLTU;
+
+                    default:            ALUOp = `ALU_ADD;
+                endcase
+            end
+            
             default: RegWEn = 0;
         endcase
     end
-
-    assign funct3 = instr[14:12];
-    assign funct7 = instr[31:25];
 
 endmodule

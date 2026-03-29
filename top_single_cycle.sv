@@ -4,7 +4,7 @@ module singleCycleCPU #(
     input logic clk,
     input logic reset
 );
-    logic [31:0] pc_reg = 0;
+    logic [31:0] pc_reg = -4;
     logic [31:0] instr_reg;
 
     always @(posedge clk) begin
@@ -41,11 +41,10 @@ module singleCycleCPU #(
         .y(immediate)
     );
 
-    wire [31:0] wb_data = 
+    // wire [31:0] wb_data = 
     wire [31:0] rdata1, rdata2;
     regfile rf (
         .clk(clk),
-        .reset(reset),
         .wenable(regwen),
         .rd(instr_reg[11:7]),
         .wdata(y),
@@ -59,8 +58,8 @@ module singleCycleCPU #(
     wire zero;
     wire [31:0] y;
 
-    wire [31:0] alu_a = asel ? pc : rdata1;
-    wire [31:0] alu_b = asel ? immediate : rdata2;
+    wire [31:0] alu_a = asel ? pc_reg : rdata1;
+    wire [31:0] alu_b = bsel ? immediate : rdata2;
     alu alu1 (
         .aluop(aluop),
         .A(alu_a),
