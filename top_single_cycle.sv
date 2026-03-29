@@ -8,7 +8,7 @@ module singleCycleCPU #(
     logic [31:0] instr_reg;
 
     always @(posedge clk) begin
-        pc_reg <= pc_reg + 4;
+        pc_reg <= pcsel ? y : pc_reg + 4;
     end
 
     instruction_memory imem (
@@ -16,14 +16,14 @@ module singleCycleCPU #(
         .instruction(instr_reg)
     );
 
-    wire pcsel, regwen, brun, bsel, asel, memrw;
-    wire [3:0] aluop;
-    wire [1:0] wbsel;
+    logic pcsel, regwen, brun, bsel, asel, memrw, breq, brlt;
+    logic [3:0] aluop;
+    logic [1:0] wbsel;
 
     controlUnit cu (
         .instr(instr_reg),
-        .BrEq(0),
-        .BrLT(0),
+        .BrEq(breq),
+        .BrLT(brlt),
 
         .PCSel(pcsel),
         .RegWEn(regwen),
@@ -35,14 +35,14 @@ module singleCycleCPU #(
         .WBSel(wbsel)
     );
 
-    wire [31:0] immediate;
+    logic [31:0] immediate;
     immGen imm (
         .instr(instr_reg),
         .y(immediate)
     );
 
-    // wire [31:0] wb_data = 
-    wire [31:0] rdata1, rdata2;
+    // logic [31:0] wb_data = 
+    logic [31:0] rdata1, rdata2;
     regfile rf (
         .clk(clk),
         .wenable(regwen),
@@ -55,11 +55,23 @@ module singleCycleCPU #(
         .rdata2(rdata2)
     );
 
-    wire zero;
-    wire [31:0] y;
+    branchComp comparator (
+        .A(rdata1),
+        .B(rdata2),
+        .BrUn(brun),
 
-    wire [31:0] alu_a = asel ? pc_reg : rdata1;
-    wire [31:0] alu_b = bsel ? immediate : rdata2;
+        .BrLT(brlt),
+        .BrEq(breq)
+    );
+
+    logic zero;
+    logic [31:0] y;
+
+    logic [31:0] alu_a;
+    logic [31:0] alu_b;
+
+    assign alu_a = asel ? pc_reg : rdata1; 
+    assign alu_b = bsel ? immediate : rdata2;
     alu alu1 (
         .aluop(aluop),
         .A(alu_a),

@@ -71,6 +71,28 @@ module controlUnit #(
                 endcase
             end
             
+            `OPC_BRANCH: begin
+                ASel = 1;
+                BSel = 1;
+                ALUOp = `ALU_ADD;
+
+                case (funct3)
+                    `FUNCT3_BEQ:        PCSel = BrEq ? 1 : 0;
+                    `FUNCT3_BNE:        PCSel = ~BrEq ? 1 : 0;
+                    `FUNCT3_BLT:        PCSel = (BrLT) ? 1 : 0;
+                    `FUNCT3_BGE:        PCSel = (~BrLT) ? 1 : 0;
+                    `FUNCT3_BLTU: begin
+                                        BrUn = 1;
+                                        PCSel = (BrLT) ? 1 : 0;
+                    end
+                    `FUNCT3_BGEU: begin
+                                        BrUn = 1;
+                                        PCSel = (~BrLT) ? 1 : 0;
+                    end
+                    default: PCSel = 0;
+                endcase
+            end
+
             default: RegWEn = 0;
         endcase
     end
