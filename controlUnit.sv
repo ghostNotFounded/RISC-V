@@ -12,10 +12,12 @@ module controlUnit #(
     output logic RegWEn,
     output logic BrUn,
     output logic BSel,
-    output logic ASel,
+    output logic [1:0] ASel,
+    output logic [2:0] Mode,
     output logic [3:0] ALUOp,
     output logic MemRW,
-    output logic [1:0] WBSel
+    output logic [1:0] WBSel,
+    output logic [2:0] immSel
 );
     logic [2:0] funct3;
     logic [6:0] funct7;
@@ -24,6 +26,7 @@ module controlUnit #(
     assign funct7 = instr[31:25];
 
     always_comb begin
+        Mode = 0;
         PCSel = 0;
         RegWEn = 0;
         BrUn = 0;
@@ -32,6 +35,7 @@ module controlUnit #(
         ALUOp = 0;
         MemRW = 0;
         WBSel = 0;
+        immSel = 0;
 
         case (instr[6:0])
             `OPC_R: begin
@@ -56,6 +60,7 @@ module controlUnit #(
                 RegWEn = 1;
                 BSel = 1;
                 WBSel = `WBSel_ALU;
+                immSel = `IMMSEL_I;
 
                 case (funct3)
                     `FUNCT3_ADDI:       ALUOp = `ALU_ADD;
@@ -70,11 +75,26 @@ module controlUnit #(
                     default:            ALUOp = `ALU_ADD;
                 endcase
             end
+
+            `OPC_STORE: begin
+                BSel = 1;
+                ALUOp = `ALU_ADD;
+                MemRW = 1;
+                immSel = `IMMSEL_S;
+
+                case (funct3)
+                    `FUNCT3_SB: Mode = `MEM_BYTE;
+                    `FUNCT3_SW: Mode = `MEM_WORD;
+                    `FUNCT3_SH: Mode = `MEM_HWORD; 
+                    default: ;
+                endcase
+            end
             
             `OPC_BRANCH: begin
                 ASel = 1;
                 BSel = 1;
                 ALUOp = `ALU_ADD;
+                immSel = `IMMSEL_B;
 
                 case (funct3)
                     `FUNCT3_BEQ:        PCSel = BrEq ? 1 : 0;
@@ -91,6 +111,59 @@ module controlUnit #(
                     end
                     default: PCSel = 0;
                 endcase
+            end
+
+            `OPC_JAL: begin
+                PCSel = 1;
+                RegWEn = 1;
+                BSel = 1;
+                ASel = 1;
+                ALUOp = `ALU_ADD;
+                WBSel = `WBSel_PC4;
+                immSel = `IMMSEL_J;
+            end
+
+            `OPC_JALR: begin
+                PCSel = 1;
+                RegWEn = 1;
+                BSel = 1;
+                ALUOp = `ALU_ADD;
+                WBSel = `WBSel_PC4;
+                immSel = `IMMSEL_I;
+            end
+
+            `OPC_LOAD: begin
+                BSel = 1;
+                RegWEn = 1;
+                ALUOp = `ALU_ADD;
+                immSel = `IMMSEL_I;
+
+                case (funct3)
+                    `FUNCT3_LW: Mode = `MEM_WORD;
+                    `FUNCT3_LH: Mode = `MEM_HWORD; 
+                    `FUNCT3_LB: Mode = `MEM_BYTE;
+                    `FUNCT3_LHU: Mode = `MEM_HWORD_U; 
+                    `FUNCT3_LBU: Mode = `MEM_BYTE_U;
+                    default: ;
+                endcase
+            end
+
+            `OPC_LUI: begin
+                RegWEn = 1;
+                WBSel = `WBSel_ALU;
+                immSel = `IMMSEL_U;
+                ALUOp = `ALU_ADD;
+                BSel = 1;
+                ASel = 2'b10;
+            end
+
+            `OPC_AUIPC: begin
+                RegWEn = 1;
+                WBSel = `WBSel_ALU;
+                immSel = `IMMSEL_U;
+                ALUOp = `ALU_ADD;
+                BSel = 1;
+                ASel = 2'b01;
             end
 
             default: RegWEn = 0;

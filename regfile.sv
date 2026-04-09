@@ -18,25 +18,15 @@ module regfile #(
 );
     logic [BUS_SIZE-1:0] regs[0:REG_COUNT-1];   // 32 32-bit registers
 
-    always @(negedge clk) begin
-            if (wenable) begin
-                regs[rd] <= wdata;
-            end
+    always @(posedge clk) begin
+        if (wenable && rd != 0) regs[rd] <= wdata;
     end
 
     always @(*) begin
-        if (rs1 == 0) begin
-            rdata1 = 0;
-        end else begin
-            rdata1 = regs[rs1];
-        end
+        rdata1 = (rs1 == 0) ? 32'b0 : regs[rs1];
     end
 
     always @(*) begin
-        if (rs2 == 0) begin
-            rdata2 = 0;
-        end else begin
-            rdata2 = regs[rs2];
-        end
+        rdata2 = (rs2 == 0) ? 32'b0 : regs[rs2];
     end
 endmodule

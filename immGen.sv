@@ -1,9 +1,11 @@
 `timescale 1ns/1ps
+`include "consts.svh"
 
 module immGen #(
     parameter BUS_SIZE = 32
 ) (
     input logic [31:0] instr,
+    input logic [2:0] immSel,
 
     output logic [31:0] y
 );
@@ -15,17 +17,14 @@ module immGen #(
     assign y_jump = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
     assign y_upper = {instr[31:12], 12'b0};
 
-    always @(*) begin
-        case (instr[6:0])
-            7'b0010011: y = y_imm;      // addi xori ori andi slli srli srai slti sltiu
-            7'b0000011: y = y_imm;      // lb lh lw lbu lhu
-            7'b0100011: y = y_store;    // sb sh sw
-            7'b1100011: y = y_branch;   // beq bne blt bge bltu bgeu
-            7'b1101111: y = y_jump;     // jal
-            7'b1100111: y = y_imm;      // jalr
-            7'b0110111: y = y_upper;    // lui
-            7'b0010111: y = y_upper;    // auipc
-            default:    y = 32'b0;
+    always_comb begin
+        case (immSel)
+            `IMMSEL_I: y = y_imm;
+            `IMMSEL_S: y = y_store;
+            `IMMSEL_B: y = y_branch;
+            `IMMSEL_U: y = y_upper;
+            `IMMSEL_J: y = y_jump;
+            default: y = 32'b0;
         endcase
     end
 endmodule

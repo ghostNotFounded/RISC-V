@@ -35,16 +35,16 @@
     `define FUNCT3_SLLI         3'b001
 
     // FUNCT3 (LOAD)
-    `define FUNCT3_LW           3'b010
     `define FUNCT3_LB           3'b000
     `define FUNCT3_LH           3'b001
+    `define FUNCT3_LW           3'b010
     `define FUNCT3_LBU          3'b100 
     `define FUNCT3_LHU          3'b101
 
     // FUNCT3 (STORE)
     `define FUNCT3_SB           3'b000
-    `define FUNCT3_SW           3'b010
     `define FUNCT3_SH           3'b001
+    `define FUNCT3_SW           3'b010
 
     // FUNCT3 (BRANCH)
     `define FUNCT3_BEQ          3'b000
@@ -68,8 +68,22 @@
     `define ALU_SLT             4'd8
     `define ALU_SLTU            4'd9
 
+    // Memory operation modes
+    `define MEM_WORD            3'b000
+    `define MEM_HWORD           3'b001
+    `define MEM_BYTE            3'b010
+    `define MEM_BYTE_U          3'b100
+    `define MEM_HWORD_U         3'b101
+
+    // ImmSel
+    `define IMMSEL_I            3'b000
+    `define IMMSEL_S            3'b001
+    `define IMMSEL_B            3'b010
+    `define IMMSEL_U            3'b011
+    `define IMMSEL_J            3'b100
+
     // Write Back Operations
-    `define WBSel_MEM           2'b00;
-    `define WBSel_ALU           2'b01;
-    `define WBSel_PC4           2'b10;
+    `define WBSel_MEM           2'b00
+    `define WBSel_ALU           2'b01
+    `define WBSel_PC4           2'b10
 `endif

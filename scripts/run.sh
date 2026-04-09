@@ -1,47 +1,31 @@
 #!/usr/bin/env bash
 set -e
 
-# 1. Setup
-if [ -z "$1" ]; then
-    echo "Usage: $0 <module_name>"
-    exit 1
-fi
+# Paths
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+TB_FILE="$PROJECT_DIR/test/tb_$1.sv"
+EXE_PATH="$PROJECT_DIR/sim/sim_$1"
+HEX_DIR="$PROJECT_DIR/tests"
 
-MODULE=$1
-TB_FILE="test/tb_${MODULE}.sv"
-SRC_FILE="${MODULE}.sv"
+mkdir -p "$PROJECT_DIR/sim"
 
-# Use PWD to ensure Verilator puts the binary in the right project folder
-EXE_NAME="sim_${MODULE}"
-EXE_PATH="$(pwd)/sim/$EXE_NAME"
-VCD_FILE="sim/vcd/${MODULE}.vcd"
-
-# Ensure directories exist
-mkdir -p sim/vcd
-
-# 2. Compile
-echo "==> Compiling ${MODULE} with Verilator..."
-verilator --binary --trace --timing \
+# 1. Compile — list ALL your .sv source files here
+echo "==> Compiling..."
+verilator --binary --timing \
     -sv \
-    --top-module "tb_${MODULE}" \
-    "$TB_FILE" "$SRC_FILE" \
+    --top-module tb_$1 \
+    "$TB_FILE" \
+    "$PROJECT_DIR/$1.sv" \
+    "$PROJECT_DIR/instruction_memory.sv" \
+    "$PROJECT_DIR/BankedMEM.sv" \
+    "$PROJECT_DIR/controlUnit.sv" \
+    "$PROJECT_DIR/alu.sv" \
+    "$PROJECT_DIR/regfile.sv" \
+    "$PROJECT_DIR/immGen.sv" \
+    "$PROJECT_DIR/branchComp.sv" \
+    -I"$PROJECT_DIR" \
     -o "$EXE_PATH"
 
-# 3. Run
-echo "==> Running simulation for ${MODULE}..."
-# When using --binary, the executable is placed exactly where -o specifies
-"$EXE_PATH" +vcd="$VCD_FILE"
-
-# 4. Open Waveform
-if [ -f "$VCD_FILE" ]; then
-    echo "==> Opening waveform: $VCD_FILE"
-    gtkwave "$VCD_FILE" &
-else
-    # Fallback check for the hardcoded name in your TB
-    if [ -f "task1.vcd" ]; then
-         mv task1.vcd "$VCD_FILE"
-         gtkwave "$VCD_FILE" &
-    else
-        echo "Warning: $VCD_FILE not found."
-    fi
-fi
+# 2. Run all tests
+echo "==> Running riscv-tests..."
+"$EXE_PATH" +hex_dir="$HEX_DIR/"
