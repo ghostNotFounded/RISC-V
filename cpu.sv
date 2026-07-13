@@ -5,7 +5,9 @@ module CPU #(
     parameter BUS_SIZE = 32
 ) (
     input logic clk,
-    input logic reset
+    input logic reset,
+    
+    output logic [31:0] debug_out
 );
 
 // IF STAGE
@@ -272,5 +274,7 @@ module CPU #(
             mem_wb_wbsel    <= ex_mem_wbsel;
         end
     end
+    
+    assign debug_out = mem_wb_y;
 
 endmodule
