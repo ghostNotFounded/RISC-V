@@ -15,11 +15,15 @@ verilator --binary --timing \
     -sv \
     --top-module tb_$1 \
     "$TB_FILE" \
+    $([ "$1" != "top_multi_cycle" ] && echo "$PROJECT_DIR/top_multi_cycle.sv") \
+    $([ "$1" != "cpu" ] && echo "$PROJECT_DIR/cpu.sv") \
     "$PROJECT_DIR/$1.sv" \
     "$PROJECT_DIR/instruction_memory.sv" \
     "$PROJECT_DIR/BankedMEM.sv" \
     "$PROJECT_DIR/controlUnit.sv" \
     "$PROJECT_DIR/alu.sv" \
+    "$PROJECT_DIR/multUnit.sv" \
+    "$PROJECT_DIR/divUnit.sv" \
     "$PROJECT_DIR/regfile.sv" \
     "$PROJECT_DIR/immGen.sv" \
     "$PROJECT_DIR/branchComp.sv" \

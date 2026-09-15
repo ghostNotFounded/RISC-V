@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_cpu;
+module tb_top_multi_cycle;
     reg clk, reset;
 
     top_multi_cycle uut (
@@ -24,10 +24,10 @@ module tb_cpu;
     begin
         // Clear IMEM, DMEM, regfile
         for (int i = 0; i < 16384; i++) uut.IMEM.mem[i] = 0;
-        for (int i = 0; i < 16384;  i++) uut.DMEM.mem[i] = 0;
-        for (int i = 0; i < 32;    i++) uut.CPU_inst.RF.regs[i]  = 0;
+        for (int i = 0; i < 16384; i++) uut.DMEM.mem[i] = 0;
+        for (int i = 0; i < 32;    i++) uut.CPU_inst.RF.regs[i] = 0;
 
-        // Load program into IMEM
+        // Load program into IMEM and DMEM
         $readmemh(hex_file, uut.IMEM.mem);
         $readmemh(hex_file, uut.DMEM.mem, 13'h800);
 
@@ -37,7 +37,6 @@ module tb_cpu;
         @(posedge clk);
         reset = 0;
 
-        // Snoop the store bus for a write to tohost (byte addr 0x1000)
         tohost = 0;
         for (cycle = 0; cycle < 10000; cycle++) begin
             @(posedge clk);
