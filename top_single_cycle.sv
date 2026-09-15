@@ -38,7 +38,10 @@ module singleCycleCPU #(
         .ALUOp(aluop),
         .MemRW(memrw),
         .WBSel(wbsel),
-        .immSel(imm_sel)
+        .immSel(imm_sel),
+        .MultEn(),
+        .DivEn(),
+        .MDUOp()
     );
 
     logic [31:0] immediate;
@@ -95,13 +98,89 @@ module singleCycleCPU #(
         .y(y)
     );
 
+    logic [3:0] byte_mask;
+    logic [31:0] formatted_wdata;
+    always_comb begin
+        if (memrw) begin
+            case (mode)
+                `MEM_WORD: begin
+                    byte_mask       = 4'b1111;
+                    formatted_wdata = rdata2;
+                end
+                `MEM_HWORD: begin
+                    byte_mask       = y[1] ? 4'b1100 : 4'b0011;
+                    formatted_wdata = y[1] ? {rdata2[15:0], 16'b0} : {16'b0, rdata2[15:0]};
+                end
+                `MEM_BYTE: begin
+                    case (y[1:0])
+                        2'b00: begin
+                            byte_mask       = 4'b0001;
+                            formatted_wdata = {24'b0, rdata2[7:0]};
+                        end
+                        2'b01: begin
+                            byte_mask       = 4'b0010;
+                            formatted_wdata = {16'b0, rdata2[7:0], 8'b0};
+                        end
+                        2'b10: begin
+                            byte_mask       = 4'b0100;
+                            formatted_wdata = {8'b0, rdata2[7:0], 16'b0};
+                        end
+                        2'b11: begin
+                            byte_mask       = 4'b1000;
+                            formatted_wdata = {rdata2[7:0], 24'b0};
+                        end
+                        default: begin
+                            byte_mask       = 4'b0000;
+                            formatted_wdata = 32'b0;
+                        end
+                    endcase
+                end
+                default: begin
+                    byte_mask       = 4'b0000;
+                    formatted_wdata = 32'b0;
+                end
+            endcase
+        end else begin
+            byte_mask       = 4'b0000;
+            formatted_wdata = 32'b0;
+        end
+    end
+
+    logic [31:0] mem_raw_data;
     logic [31:0] mem_data;
+    always_comb begin
+        case (mode)
+            `MEM_WORD:  mem_data = mem_raw_data;
+            `MEM_HWORD: mem_data = y[1] ? {{16{mem_raw_data[31]}}, mem_raw_data[31:16]} : {{16{mem_raw_data[15]}}, mem_raw_data[15:0]};
+            `MEM_BYTE: begin
+                case (y[1:0])
+                    2'b00: mem_data = {{24{mem_raw_data[7]}},  mem_raw_data[7:0]};
+                    2'b01: mem_data = {{24{mem_raw_data[15]}}, mem_raw_data[15:8]};
+                    2'b10: mem_data = {{24{mem_raw_data[23]}}, mem_raw_data[23:16]};
+                    2'b11: mem_data = {{24{mem_raw_data[31]}}, mem_raw_data[31:24]};
+                    default: mem_data = 32'b0;
+                endcase
+            end
+            `MEM_HWORD_U: mem_data = y[1] ? {16'b0, mem_raw_data[31:16]} : {16'b0, mem_raw_data[15:0]};
+            `MEM_BYTE_U: begin
+                case (y[1:0])
+                    2'b00: mem_data = {24'b0, mem_raw_data[7:0]};
+                    2'b01: mem_data = {24'b0, mem_raw_data[15:8]};
+                    2'b10: mem_data = {24'b0, mem_raw_data[23:16]};
+                    2'b11: mem_data = {24'b0, mem_raw_data[31:24]};
+                    default: mem_data = 32'b0;
+                endcase
+            end
+            default: mem_data = 32'b0;
+        endcase
+    end
+
     BankedMEM DMEM (
         .clk(clk),
-        .mode(mode),
         .writeEn(memrw),
         .address(y),
-        .writeData(rdata2),
-        .readData(mem_data)
+        .writeData(formatted_wdata),
+        .byte_mask(byte_mask),
+        .readData(mem_raw_data)
     );
 endmodule

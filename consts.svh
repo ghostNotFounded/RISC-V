@@ -10,6 +10,15 @@
     `define OPC_JALR            7'b1100111
     `define OPC_LUI             7'b0110111
     `define OPC_AUIPC           7'b0010111
+    `define OPC_FENCE           7'b0001111
+    `define OPC_SYSTEM          7'b1110011
+
+    // FUNCT3 (FENCE)
+    `define FUNCT3_FENCE        3'b000
+    `define FUNCT3_FENCE_I      3'b001
+
+    // FUNCT3 (SYSTEM)
+    `define FUNCT3_ECALL_EBREAK 3'b000
 
     // FUNCT3 (R)
     `define FUNCT3_ADD_SUB      3'h0
@@ -21,8 +30,19 @@
     `define FUNCT3_OR           3'h6
     `define FUNCT3_AND          3'h7
 
+    // FUNCT3 (M)
+    `define FUNCT3_MUL          3'b000
+    `define FUNCT3_MULH         3'b001
+    `define FUNCT3_MULHSU       3'b010
+    `define FUNCT3_MULHU        3'b011
+    `define FUNCT3_DIV          3'b100
+    `define FUNCT3_DIVU         3'b101
+    `define FUNCT3_REM          3'b110
+    `define FUNCT3_REMU         3'b111
+
     // FUNCT7 (R)
     `define FUNCT7_SRA_SUB      7'h20
+    `define FUNCT7_MUL          7'h01
 
     // FUNCT3 (I)
     `define FUNCT3_ADDI         3'b000

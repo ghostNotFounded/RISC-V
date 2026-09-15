@@ -17,7 +17,10 @@ module controlUnit #(
     output logic [3:0] ALUOp,
     output logic MemRW,
     output logic [1:0] WBSel,
-    output logic [2:0] immSel
+    output logic [2:0] immSel,
+    output logic MultEn,
+    output logic DivEn,
+    output logic [1:0] MDUOp
 );
     logic [2:0] funct3;
     logic [6:0] funct7;
@@ -36,24 +39,36 @@ module controlUnit #(
         MemRW = 0;
         WBSel = 0;
         immSel = 0;
+        MultEn = 0;
+        DivEn = 0;
+        MDUOp = 0;
 
         case (instr[6:0])
             `OPC_R: begin
                 RegWEn = 1;
                 WBSel = `WBSel_ALU;
 
-                case (funct3)
-                    `FUNCT3_ADD_SUB:    ALUOp = (funct7 == `FUNCT7_SRA_SUB) ? `ALU_SUB : `ALU_ADD;
-                    `FUNCT3_SLL:        ALUOp = `ALU_SLL;
-                    `FUNCT3_SRL_SRA:    ALUOp = (funct7 == `FUNCT7_SRA_SUB) ? `ALU_SRA : `ALU_SRL;
-                    `FUNCT3_SLT:        ALUOp = `ALU_SLT;
-                    `FUNCT3_SLTU:       ALUOp = `ALU_SLTU;
-                    `FUNCT3_XOR:        ALUOp = `ALU_XOR;
-                    `FUNCT3_OR:         ALUOp = `ALU_OR;
-                    `FUNCT3_AND:        ALUOp = `ALU_AND;
+                if (funct7 == `FUNCT7_MUL) begin
+                    MDUOp = funct3[1:0];
+                    if (funct3[2] == 1'b0) begin
+                        MultEn = 1;
+                    end else begin
+                        DivEn = 1;
+                    end
+                end else begin
+                    case (funct3)
+                        `FUNCT3_ADD_SUB:    ALUOp = (funct7 == `FUNCT7_SRA_SUB) ? `ALU_SUB : `ALU_ADD;
+                        `FUNCT3_SLL:        ALUOp = `ALU_SLL;
+                        `FUNCT3_SRL_SRA:    ALUOp = (funct7 == `FUNCT7_SRA_SUB) ? `ALU_SRA : `ALU_SRL;
+                        `FUNCT3_SLT:        ALUOp = `ALU_SLT;
+                        `FUNCT3_SLTU:       ALUOp = `ALU_SLTU;
+                        `FUNCT3_XOR:        ALUOp = `ALU_XOR;
+                        `FUNCT3_OR:         ALUOp = `ALU_OR;
+                        `FUNCT3_AND:        ALUOp = `ALU_AND;
 
-                    default:            ALUOp = `ALU_ADD;
-                endcase
+                        default:            ALUOp = `ALU_ADD;
+                    endcase
+                end
             end
 
             `OPC_I: begin
@@ -164,6 +179,16 @@ module controlUnit #(
                 ALUOp = `ALU_ADD;
                 BSel = 1;
                 ASel = 2'b01;
+            end
+
+            `OPC_FENCE: begin
+                RegWEn = 0;
+                MemRW  = 0;
+            end
+
+            `OPC_SYSTEM: begin
+                RegWEn = 0;
+                MemRW  = 0;
             end
 
             default: RegWEn = 0;

@@ -19,9 +19,9 @@ module alu #(
             `ALU_OR:    y = A | B;
             `ALU_XOR:   y = A ^ B;
             
-            `ALU_SLL:   y = A << B[5:0];
-            `ALU_SRL:   y = A >> B[5:0];
-            `ALU_SRA:   y = A >>> B[5:0];
+            `ALU_SLL:   y = A << B[4:0];
+            `ALU_SRL:   y = $unsigned(A) >> B[4:0];
+            `ALU_SRA:   y = A >>> B[4:0];
             
             `ALU_SLT:   y = (A < B) ? 32'd1 : 32'd0;
             `ALU_SLTU:  y = ($unsigned(A) < $unsigned(B)) ? 32'd1 : 32'd0;

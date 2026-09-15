@@ -22,11 +22,23 @@ module regfile #(
         if (wenable && rd != 0) regs[rd] <= wdata;
     end
 
-    always @(*) begin
-        rdata1 = (rs1 == 0) ? 32'b0 : regs[rs1];
+    always_comb begin
+        if (rs1 == 0) begin
+            rdata1 = 32'b0;
+        end else if (wenable && (rd == rs1)) begin
+            rdata1 = wdata;
+        end else begin
+            rdata1 = regs[rs1];
+        end
     end
 
-    always @(*) begin
-        rdata2 = (rs2 == 0) ? 32'b0 : regs[rs2];
+    always_comb begin
+        if (rs2 == 0) begin
+            rdata2 = 32'b0;
+        end else if (wenable && (rd == rs2)) begin
+            rdata2 = wdata;
+        end else begin
+            rdata2 = regs[rs2];
+        end
     end
 endmodule
